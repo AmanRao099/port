@@ -4,6 +4,7 @@ import { useIsMobile } from "./hooks/useIsMobile";
 import { Loader } from "./components/ui/Loader";
 import { Cursor } from "./components/ui/Cursor";
 import { PixelPet } from "./components/ui/PixelPet";
+import { ResumeTerminal } from "./components/ui/ResumeTerminal";
 import { Nav } from "./components/Nav";
 import { Hero } from "./components/Hero";
 import { About } from "./components/About";
@@ -41,6 +42,7 @@ function App() {
       </main>
       <Footer />
       <PixelPet />
+      <ResumeTerminal />
     </LenisProvider>
   );
 }

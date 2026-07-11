@@ -13,7 +13,7 @@ export const profile = {
     { label: "GitHub", href: "https://github.com/AmanRao099", handle: "@AmanRao099" },
     { label: "LinkedIn", href: "https://linkedin.com/in/aman099", handle: "in/aman099" },
   ],
-  resumeHref: "/resume.pdf",
+  resumeHref: "/resume/resume.pdf",
   stats: [
     { value: 2, suffix: "", label: "Startups co-founded" },
     { value: 20, suffix: "+", label: "Full-stack products shipped" },

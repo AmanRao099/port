@@ -106,14 +106,14 @@ export function PixelPet() {
     if (ms !== Infinity) bubbleTimer.current = setTimeout(() => setBubble(null), ms);
   };
 
-  // hand over the goods — must run inside a user gesture so the browser
-  // allows the new tab
+  // hand over the goods — the ResumeTerminal command panel picks this up
+  // and replays the document in-page instead of opening a new tab
   const takeResume = () => {
     const s = stateRef.current;
     s.fetch = null;
     setCarrying(false);
     window.dispatchEvent(new Event("pet:resume-done"));
-    window.open("/resume.pdf", "_blank", "noopener");
+    window.dispatchEvent(new Event("pet:resume-open"));
     blip("tap");
     showBubble("♥", 1200);
   };
