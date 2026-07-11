@@ -6,6 +6,7 @@ export type Project = {
   href: string;
   repo?: string;
   metric: string;
+  hologram?: "bb8" | "tourist" | "shawarma";
 };
 
 export const projects: Project[] = [
@@ -17,6 +18,7 @@ export const projects: Project[] = [
     gradient: ["#00ff9f", "#00e5ff"],
     href: "https://github.com/AmanRao099/nyrosphere_main",
     metric: "Voice + vision + control, realtime",
+    hologram: "bb8",
   },
   {
     title: "ITourister — Travel Recommendation App",
@@ -26,6 +28,7 @@ export const projects: Project[] = [
     gradient: ["#ff2975", "#00ff9f"],
     href: "https://github.com/AmanRao099/ITourister-Application",
     metric: "Personalized, location-aware picks",
+    hologram: "tourist",
   },
   {
     title: "GBDDoner — Restaurant Chain Platform",
@@ -35,6 +38,7 @@ export const projects: Project[] = [
     gradient: ["#00e5ff", "#ff2975"],
     href: "https://gbddoner.com",
     metric: "100% client-editable content",
+    hologram: "shawarma",
   },
   {
     title: "This Site — Retro Interactive Portfolio",

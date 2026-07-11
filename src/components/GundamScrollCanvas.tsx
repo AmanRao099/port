@@ -6,14 +6,19 @@ const FRAME_COUNT = 240;
 const frameSrc = (index: number) =>
   `/images/gundam-sequence/ezgif-frame-${String(index + 1).padStart(3, "0")}.jpg`;
 
+type ScrollOffset = NonNullable<NonNullable<Parameters<typeof useScroll>[0]>["offset"]>;
+
 interface GundamScrollCanvasProps {
   /** Banner section whose scroll progress drives the sequence; window scroll when omitted. */
   containerRef?: RefObject<HTMLElement | null>;
+  /** Scroll range mapped to the sequence; defaults to the container's full scroll span. */
+  offset?: ScrollOffset;
   className?: string;
 }
 
 export function GundamScrollCanvas({
   containerRef,
+  offset = ["start start", "end end"],
   className,
 }: GundamScrollCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -23,9 +28,7 @@ export function GundamScrollCanvas({
   const rafRef = useRef(0);
 
   const { scrollYProgress } = useScroll(
-    containerRef
-      ? { target: containerRef, offset: ["start start", "end end"] }
-      : undefined,
+    containerRef ? { target: containerRef, offset } : undefined,
   );
 
   const frameIndex = useTransform(scrollYProgress, [0, 1], [0, FRAME_COUNT - 1], {

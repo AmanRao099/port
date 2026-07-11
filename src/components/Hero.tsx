@@ -31,7 +31,7 @@ export function Hero({ isMobile }: { isMobile: boolean }) {
           <HeroCanvas isMobile={isMobile} />
         </div>
 
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[60svh] md:inset-y-0 md:left-auto md:right-0 md:h-auto md:w-1/2">
+        <div className="pointer-events-none absolute -left-1/4 -right-1/4 bottom-0 h-[60svh] md:inset-y-0 md:left-auto md:right-0 md:h-auto md:w-1/2">
           <GundamScrollCanvas containerRef={sectionRef} className="mix-blend-screen" />
         </div>
 
@@ -54,7 +54,7 @@ export function Hero({ isMobile }: { isMobile: boolean }) {
             initial="hidden"
             animate="show"
             custom={0.22}
-            className="font-display mt-6 max-w-4xl text-[16vw] leading-[0.9] font-normal tracking-wide text-paper uppercase sm:text-7xl md:text-8xl lg:text-9xl"
+            className="font-display mt-6 text-[min(7vw,5.5rem)] leading-[0.9] font-normal tracking-wide whitespace-nowrap text-paper uppercase"
           >
             Hi, I'm <GlitchText text={profile.name} className="text-gradient" />
           </motion.h1>
