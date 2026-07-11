@@ -12,7 +12,6 @@ import {
 } from "@react-three/postprocessing";
 import { BlendFunction, GlitchMode } from "postprocessing";
 import * as THREE from "three";
-import { MorphingBlob } from "./MorphingBlob";
 import { ParticleField } from "./ParticleField";
 import { RetroGrid } from "./RetroGrid";
 
@@ -52,7 +51,6 @@ export function HeroCanvas({ isMobile }: { isMobile: boolean }) {
 
       <Suspense fallback={null}>
         <RetroGrid />
-        <MorphingBlob isMobile={isMobile} />
         <ParticleField isMobile={isMobile} />
       </Suspense>
 

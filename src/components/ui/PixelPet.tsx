@@ -73,6 +73,7 @@ export function PixelPet() {
     edgeLatch: false,
     climb: null as { x: number; top: number; dir: 1 | -1 } | null,
     climbStart: 0,
+    ground: null as Platform | null,
     // drag bookkeeping
     grabDX: 0,
     grabDY: 0,
@@ -256,6 +257,17 @@ export function PixelPet() {
 
     // glitch-teleport back to wherever the reader is
     const respawn = () => {
+      surfaces = collectSurfaces();
+      // nothing to land on in view (e.g. mid-banner scrub) — stay put and retry
+      // later instead of raining through the empty viewport on repeat
+      const vTop = window.scrollY;
+      const hasGround = surfaces.platforms.some(
+        (p) => p.top > vTop + SIZE && p.top < vTop + window.innerHeight,
+      );
+      if (!hasGround) {
+        s.offscreenAt = 0;
+        return;
+      }
       s.x = window.innerWidth * (0.15 + Math.random() * 0.7);
       s.y = window.scrollY - SIZE * 2;
       s.vx = 0;
@@ -275,6 +287,7 @@ export function PixelPet() {
       );
 
     const land = (p: Platform, now: number) => {
+      s.ground = p;
       s.y = p.top - SIZE;
       s.vy = 0;
       s.mode = "walk";
@@ -345,6 +358,7 @@ export function PixelPet() {
           s.x += s.climb.dir * (SIZE * 0.5);
           s.climb = null;
           s.mode = "walk";
+          s.ground = null; // re-acquire under the new position
           s.nextThink = now + 600 + Math.random() * 1400;
           dust();
         } else if (now - s.climbStart > MAX_CLIMB_MS) {
@@ -361,7 +375,30 @@ export function PixelPet() {
           setBubble(null);
         }
       } else {
-        const ground = support();
+        // ride the held platform by identity, re-reading its live rect every
+        // frame — cached snapshots lag up to 1.2s, which makes the pet drift
+        // against pinned (sticky) surfaces that move in document space
+        let ground = s.ground;
+        if (ground?.el) {
+          const el = ground.el;
+          if (!el.isConnected) {
+            ground = null;
+          } else {
+            const r = el.getBoundingClientRect();
+            if (r.width < 70 || r.height < 8) {
+              ground = null;
+            } else {
+              ground.left = r.left + 4;
+              ground.right = r.right - 4;
+              ground.top = r.top + window.scrollY;
+            }
+          }
+        }
+        if (ground && (s.x + SIZE * 0.7 <= ground.left || s.x + SIZE * 0.3 >= ground.right)) {
+          ground = null; // walked off the span
+        }
+        if (!ground) ground = support() ?? null;
+        s.ground = ground;
         if (!ground) {
           s.mode = "fall";
           s.vy = 0;
