@@ -642,7 +642,7 @@ body {
 /* the ascent only runs while the hologram is active, so every hover starts
    the flight from below the screen */
 .gholo-on .gholo-flight {
-  animation: gholo-flight 11s linear infinite;
+  animation: gholo-flight 6.5s linear infinite;
 }
 @keyframes gholo-flight {
   0% {
