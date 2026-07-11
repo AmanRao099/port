@@ -598,6 +598,147 @@ body {
   }
 }
 
+.gholo {
+  position: fixed;
+  inset: 0;
+  z-index: 150;
+  pointer-events: none;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 0.35s steps(6),
+    visibility 0s linear 0.35s;
+}
+.gholo.gholo-on {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.35s steps(6);
+}
+.gholo::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(2, 4, 3, 0.68);
+}
+.gholo-beam {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 72vw;
+  height: 46vh;
+  transform: translateX(-50%);
+  background: linear-gradient(to top, rgba(0, 229, 255, 0.28), rgba(0, 229, 255, 0.02));
+  clip-path: polygon(46% 100%, 54% 100%, 100% 0, 0 0);
+  animation: holo-beam 2.8s ease-in-out infinite;
+}
+.gholo-flight {
+  display: block;
+  transform: translateY(calc(50vh + 65%));
+}
+/* the ascent only runs while the hologram is active, so every hover starts
+   the flight from below the screen */
+.gholo-on .gholo-flight {
+  animation: gholo-flight 11s linear infinite;
+}
+@keyframes gholo-flight {
+  0% {
+    transform: translateY(calc(50vh + 65%));
+  }
+  100% {
+    transform: translateY(calc(-50vh - 65%));
+  }
+}
+.gholo-model {
+  position: relative;
+  display: block;
+  animation: gholo-float 4.6s ease-in-out infinite;
+}
+.gholo-img {
+  display: block;
+  max-height: 86vh;
+  max-width: 82vw;
+  image-rendering: pixelated;
+  mix-blend-mode: screen;
+  filter: grayscale(1) brightness(1.2) sepia(1) hue-rotate(150deg) saturate(4)
+    drop-shadow(0 0 28px rgba(0, 229, 255, 0.45));
+  animation: holo-flicker 2.2s steps(12) infinite;
+}
+@keyframes gholo-float {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  33% {
+    transform: translateY(-16px) rotate(-0.8deg);
+  }
+  66% {
+    transform: translateY(-5px) rotate(0.6deg);
+  }
+}
+.gholo-thruster {
+  position: absolute;
+  display: block;
+  width: 4.5%;
+  height: 14%;
+  transform-origin: 50% 0;
+  transform: translateX(-50%) rotate(var(--rot, 0deg));
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.95),
+    rgba(0, 229, 255, 0.8) 30%,
+    rgba(0, 229, 255, 0)
+  );
+  clip-path: polygon(28% 0, 72% 0, 100% 30%, 58% 100%, 42% 100%, 0 30%);
+  filter: blur(1.5px) drop-shadow(0 0 12px rgba(0, 229, 255, 0.8));
+  animation: gholo-thrust 0.32s ease-in-out infinite;
+}
+.gholo-thruster-alt {
+  --rot: -22deg;
+  width: 3.2%;
+  height: 9.5%;
+  animation-delay: 0.12s;
+}
+@keyframes gholo-thrust {
+  0%,
+  100% {
+    transform: translateX(-50%) rotate(var(--rot, 0deg)) scaleY(1);
+    opacity: 0.95;
+  }
+  30% {
+    transform: translateX(-50%) rotate(var(--rot, 0deg)) scaleY(1.3);
+    opacity: 0.8;
+  }
+  60% {
+    transform: translateX(-50%) rotate(var(--rot, 0deg)) scaleY(0.78);
+    opacity: 1;
+  }
+}
+.gholo-band {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 18vh;
+  background: linear-gradient(to bottom, transparent, rgba(0, 229, 255, 0.14), transparent);
+  animation: gholo-band 5s linear infinite;
+}
+@keyframes gholo-band {
+  0% {
+    top: -20vh;
+  }
+  100% {
+    top: 100vh;
+  }
+}
+.gholo-scan {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(to bottom, rgba(2, 4, 3, 0.4) 0 2px, transparent 2px 5px);
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

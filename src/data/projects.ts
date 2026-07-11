@@ -6,7 +6,7 @@ export type Project = {
   href: string;
   repo?: string;
   metric: string;
-  hologram?: "bb8" | "tourist" | "shawarma";
+  hologram?: "bb8" | "tourist" | "shawarma" | "gundam";
 };
 
 export const projects: Project[] = [
@@ -48,5 +48,6 @@ export const projects: Project[] = [
     gradient: ["#00ff9f", "#ff2975"],
     href: "#top",
     metric: "240-frame scroll sequence",
+    hologram: "gundam",
   },
 ];

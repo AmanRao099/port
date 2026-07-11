@@ -1,10 +1,12 @@
-import { useRef, type MouseEvent } from "react";
+import { useRef, useState, type MouseEvent } from "react";
 import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
 import type { Project } from "../data/projects";
 import { Hologram } from "./ui/Hologram";
+import { GundamHologram } from "./ui/GundamHologram";
 
 export function ProjectCard({ project, index }: { project: Project; index: number }) {
   const ref = useRef<HTMLDivElement>(null);
+  const [hovered, setHovered] = useState(false);
   const x = useMotionValue(0.5);
   const y = useMotionValue(0.5);
 
@@ -23,9 +25,12 @@ export function ProjectCard({ project, index }: { project: Project; index: numbe
   const onMouseLeave = () => {
     x.set(0.5);
     y.set(0.5);
+    setHovered(false);
   };
 
   return (
+    <>
+    {project.hologram === "gundam" && <GundamHologram active={hovered} />}
     <motion.div
       initial={{ opacity: 0, y: 40 }}
       whileInView={{ opacity: 1, y: 0 }}
@@ -37,6 +42,7 @@ export function ProjectCard({ project, index }: { project: Project; index: numbe
         ref={ref}
         data-cursor-hover
         onMouseMove={onMouseMove}
+        onMouseEnter={() => setHovered(true)}
         onMouseLeave={onMouseLeave}
         style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}
         className="term-window group relative flex h-full flex-col overflow-hidden"
@@ -58,7 +64,9 @@ export function ProjectCard({ project, index }: { project: Project; index: numbe
           }}
         />
 
-        {project.hologram && <Hologram kind={project.hologram} />}
+        {project.hologram && project.hologram !== "gundam" && (
+          <Hologram kind={project.hologram} />
+        )}
 
         <div className="flex flex-1 flex-col p-8">
           <div className="relative flex items-start justify-between gap-4">
@@ -112,5 +120,6 @@ export function ProjectCard({ project, index }: { project: Project; index: numbe
         </div>
       </motion.div>
     </motion.div>
+    </>
   );
 }
