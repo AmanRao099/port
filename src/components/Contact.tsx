@@ -2,12 +2,25 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { SectionHeading } from "./ui/SectionHeading";
 import { MagneticButton } from "./ui/MagneticButton";
+import { ContactForm } from "./ContactForm";
+import { TetrisTransition } from "./ui/TetrisTransition";
 import { profile } from "../data/profile";
 import { useBlip } from "../hooks/useBlip";
 
 export function Contact() {
   const [copied, setCopied] = useState(false);
+  const [showForm, setShowForm] = useState(false);
+  const [playing, setPlaying] = useState(false);
   const blip = useBlip();
+
+  const letsTalk = () => {
+    blip("tap");
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setShowForm(true);
+      return;
+    }
+    setPlaying(true);
+  };
 
   const copyEmail = async () => {
     blip("tap");
@@ -37,13 +50,44 @@ export function Contact() {
         <span className="text-fog">Response time: within a day or two.</span>
       </motion.p>
 
+      {showForm ? (
+        <ContactForm />
+      ) : (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+          className="mt-12 flex justify-center"
+        >
+          <MagneticButton
+            as="button"
+            onMouseEnter={() => blip("hover")}
+            onClick={letsTalk}
+            className="pixel-shadow cursor-pointer bg-accent-2 px-10 py-5 font-pixel text-[11px] tracking-wider text-ink uppercase hover:bg-accent-2"
+          >
+            ▶ Let's talk
+          </MagneticButton>
+        </motion.div>
+      )}
+
+      {playing && (
+        <TetrisTransition
+          onFilled={() => setShowForm(true)}
+          onDone={() => setPlaying(false)}
+        />
+      )}
+
       <motion.div
         initial={{ opacity: 0, y: 24 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
         transition={{ duration: 0.6, delay: 0.3 }}
-        className="mt-12 flex flex-col items-center gap-8"
+        className="mt-14 flex flex-col items-center gap-8"
       >
+        <span className="font-pixel text-[8px] tracking-[0.2em] text-fog uppercase">
+          or email directly
+        </span>
         <MagneticButton
           as="button"
           onMouseEnter={() => blip("hover")}
