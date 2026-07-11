@@ -10,43 +10,39 @@ export type Project = {
 
 export const projects: Project[] = [
   {
-    title: "Orbit — Realtime Ops Dashboard",
+    title: "Nyrosphere — Autonomous AI Robot",
     description:
-      "A multi-tenant analytics platform streaming millions of events per day into sub-second dashboards, built with Next.js, WebSockets, and a ClickHouse pipeline.",
-    tags: ["Next.js", "TypeScript", "ClickHouse", "WebSockets"],
+      "A real-time multimodal AI robot with voice interaction, gesture recognition, and embedded hardware control — a FastAPI backend orchestrating VOSK, Piper, Ollama, MediaPipe, and ESP32 for speech, vision, and autonomous movement.",
+    tags: ["FastAPI", "Ollama", "MediaPipe", "ESP32"],
     gradient: ["#00ff9f", "#00e5ff"],
-    href: "#",
-    repo: "#",
-    metric: "2.1M events/day",
+    href: "https://github.com/AmanRao099/nyrosphere_main",
+    metric: "Voice + vision + control, realtime",
   },
   {
-    title: "Ledgerline — Payments Reconciliation",
+    title: "ITourister — Travel Recommendation App",
     description:
-      "A financial reconciliation engine that matches transactions across three payment providers with 99.99% accuracy, cutting manual review time by 80%.",
-    tags: ["Node.js", "PostgreSQL", "AWS Lambda", "Stripe API"],
+      "A full-stack travel platform that delivers personalized destination suggestions from location data and user preferences, with Google Maps integration, realtime recommendations, and a scalable backend for trip planning.",
+    tags: ["Google Maps", "Location Services", "Full-Stack", "Realtime"],
     gradient: ["#ff2975", "#00ff9f"],
-    href: "#",
-    repo: "#",
-    metric: "80% faster reconciliation",
+    href: "https://github.com/AmanRao099/ITourister-Application",
+    metric: "Personalized, location-aware picks",
   },
   {
-    title: "Fieldnote — Offline-first Mobile CMS",
+    title: "GBDDoner — Restaurant Chain Platform",
     description:
-      "A content platform for field teams working with unreliable connectivity — local-first sync engine, conflict resolution, and a lightweight admin console.",
-    tags: ["React Native", "CRDT", "FastAPI", "Redis"],
+      "A freelance-delivered full-stack website for a restaurant chain — modern responsive experience with Sanity CMS behind it, so the client updates menus, locations, and promotions without touching code.",
+    tags: ["Sanity CMS", "Full-Stack", "Responsive UI", "Freelance"],
     gradient: ["#00e5ff", "#ff2975"],
-    href: "#",
-    repo: "#",
-    metric: "100% offline reliability",
+    href: "https://gbddoner.com",
+    metric: "100% client-editable content",
   },
   {
-    title: "Prism — Design System & Component Kit",
+    title: "This Site — Retro Interactive Portfolio",
     description:
-      "An internal design system shared across five product teams, with themeable primitives, accessibility baked in, and a Storybook-driven contribution workflow.",
-    tags: ["React", "Radix", "Storybook", "Accessibility"],
+      "The page you're on: a retro-terminal portfolio with a WebGL scene, a 240-frame scroll-driven Gundam sequence on canvas, smooth scrolling, and a pixel companion with its own physics.",
+    tags: ["React 19", "Three.js", "Framer Motion", "Canvas"],
     gradient: ["#00ff9f", "#ff2975"],
-    href: "#",
-    repo: "#",
-    metric: "5 teams, 1 system",
+    href: "#top",
+    metric: "240-frame scroll sequence",
   },
 ];
