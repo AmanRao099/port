@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { TetrisBuild } from "./ui/TetrisBuild";
 import { profile } from "../data/profile";
@@ -25,10 +25,8 @@ export function ContactForm() {
   const [building, setBuilding] = useState(covered);
   const blip = useBlip();
 
-  const onSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const onSubmit = async (form: HTMLFormElement) => {
     if (status === "sending") return;
-    const form = e.currentTarget;
     const data = new FormData(form);
     if (data.get("_honey")) return; // bot filled the hidden trap field
 
@@ -80,7 +78,13 @@ export function ContactForm() {
         <span className="shrink-0 text-accent">SMTP</span>
       </div>
 
-      <form onSubmit={onSubmit} className="p-6 md:p-8">
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          void onSubmit(e.currentTarget);
+        }}
+        className="p-6 md:p-8"
+      >
         <input
           type="text"
           name="_honey"
