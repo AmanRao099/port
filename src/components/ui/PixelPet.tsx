@@ -8,6 +8,7 @@ const SIZE = 40;
 const WALK_SPEED = 38;
 const CHASE_SPEED = 80;
 const CLIMB_SPEED = 110;
+const FETCH_SPEED = 170;
 const GRAVITY = 1000;
 const MAX_FALL = 720;
 const MAX_CLIMB_MS = 4500;
@@ -34,7 +35,7 @@ function collectSurfaces(): { platforms: Platform[]; walls: Wall[] } {
   const platforms: Platform[] = [];
   const walls: Wall[] = [];
   const sy = window.scrollY;
-  document.querySelectorAll(".term-window, .pixel-shadow, h1, h2, h3, footer").forEach((el) => {
+  document.querySelectorAll(".term-window, .pixel-shadow, .res-folder, h1, h2, h3, footer").forEach((el) => {
     const r = el.getBoundingClientRect();
     if (r.width < 70 || r.height < 8) return;
     const top = r.top + sy;
@@ -57,6 +58,7 @@ export function PixelPet() {
   const bubbleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [bubble, setBubble] = useState<string | null>(null);
   const [broken, setBroken] = useState(false);
+  const [carrying, setCarrying] = useState(false);
   const blip = useBlip();
 
   const stateRef = useRef({
@@ -74,6 +76,16 @@ export function PixelPet() {
     climb: null as { x: number; top: number; dir: 1 | -1 } | null,
     climbStart: 0,
     ground: null as Platform | null,
+    // resume-courier errand driven by the ResumeFolder component
+    fetch: null as
+      | null
+      | {
+          stage: "toFolder" | "deliver" | "offer";
+          x: number;
+          y: number;
+          until: number;
+          startedAt: number;
+        },
     // drag bookkeeping
     grabDX: 0,
     grabDY: 0,
@@ -94,8 +106,24 @@ export function PixelPet() {
     if (ms !== Infinity) bubbleTimer.current = setTimeout(() => setBubble(null), ms);
   };
 
+  // hand over the goods — must run inside a user gesture so the browser
+  // allows the new tab
+  const takeResume = () => {
+    const s = stateRef.current;
+    s.fetch = null;
+    setCarrying(false);
+    window.dispatchEvent(new Event("pet:resume-done"));
+    window.open("/resume.pdf", "_blank", "noopener");
+    blip("tap");
+    showBubble("♥", 1200);
+  };
+
   const hop = () => {
     const s = stateRef.current;
+    if (s.fetch?.stage === "offer") {
+      takeResume();
+      return;
+    }
     s.lastInput = performance.now();
     if (s.mode !== "fall" && s.mode !== "drag") {
       s.mode = "fall";
@@ -160,6 +188,12 @@ export function PixelPet() {
       s.dragVX = 0;
       s.dragVY = 0;
       s.climb = null;
+      // grabbing the courier before pickup cancels the errand; a carried
+      // delivery survives the interruption
+      if (s.fetch && s.fetch.stage === "toFolder") {
+        s.fetch = null;
+        window.dispatchEvent(new Event("pet:resume-done"));
+      }
       s.lastInput = performance.now();
       pet.classList.add("pet-drag");
     };
@@ -190,6 +224,12 @@ export function PixelPet() {
       pet.classList.remove("pet-drag");
       const now = performance.now();
       const quickTap = !s.moved && now - s.pressAt < 350;
+      if (quickTap && s.fetch?.stage === "offer") {
+        s.mode = "idle";
+        s.lastInput = now;
+        takeResume();
+        return;
+      }
       s.mode = "fall";
       if (quickTap) {
         s.vy = -320;
@@ -278,6 +318,21 @@ export function PixelPet() {
       flicker();
     };
 
+    const onFetch = (e: Event) => {
+      const det = (e as CustomEvent<{ x: number; y: number }>).detail;
+      if (!det || s.fetch) return;
+      const t = performance.now();
+      s.fetch = { stage: "toFolder", x: det.x, y: det.y, until: t + 25000, startedAt: t };
+      s.lastInput = performance.now();
+      if (s.mode === "sleep") s.mode = "idle";
+      showBubble("!", 800);
+      // offscreen courier? zap in near the reader so the errand starts promptly
+      const vTop = window.scrollY;
+      const vBot = vTop + window.innerHeight;
+      if (s.y + SIZE < vTop - 60 || s.y > vBot + 60) respawn();
+    };
+    window.addEventListener("pet:fetch-resume", onFetch);
+
     const support = () =>
       surfaces.platforms.find(
         (p) =>
@@ -295,6 +350,56 @@ export function PixelPet() {
       s.edgeLatch = false;
       dust();
       thump(p.el);
+    };
+
+    // ground locomotion shared by wandering and errands: walls ahead get
+    // climbed or dodged, ledges stepped off or turned from — couriers on an
+    // errand always climb and never turn back
+    const advanceWalk = (ground: Platform, now: number, dt: number) => {
+      const urgent = !!s.fetch;
+      const nx = s.x + s.vx * dt;
+      const d = s.dir;
+      const prevLead = d === 1 ? s.x + SIZE - 6 : s.x + 6;
+      const nextLead = d === 1 ? nx + SIZE - 6 : nx + 6;
+
+      let hitWall: Wall | undefined;
+      for (const w of surfaces.walls) {
+        if (w.face !== d) continue;
+        const crossed =
+          d === 1 ? prevLead <= w.x && nextLead >= w.x : prevLead >= w.x && nextLead <= w.x;
+        if (!crossed) continue;
+        const feet = s.y + SIZE;
+        if (feet > w.top + 12 && feet < w.bottom + 24 && w.top < feet - 20) {
+          hitWall = w;
+          break;
+        }
+      }
+
+      if (hitWall) {
+        if (urgent || Math.random() < 0.6) {
+          s.mode = "climb";
+          s.climb = { x: hitWall.x, top: hitWall.top, dir: d };
+          s.climbStart = now;
+          s.vx = 0;
+        } else {
+          s.dir = (d * -1) as 1 | -1;
+          s.vx = s.dir * Math.abs(s.vx);
+        }
+      } else {
+        const center = nx + SIZE / 2;
+        const beyondEdge = center < ground.left || center > ground.right;
+        const onFloor = ground.top >= document.documentElement.scrollHeight - 40;
+        if (beyondEdge && !s.edgeLatch) {
+          s.edgeLatch = true;
+          // sometimes turn back, sometimes step off the ledge
+          if (onFloor || (!urgent && Math.random() < 0.55)) {
+            s.dir = (s.dir * -1) as 1 | -1;
+            s.vx = s.dir * Math.abs(s.vx);
+          }
+        }
+        if (!beyondEdge) s.edgeLatch = false;
+        s.x = nx;
+      }
     };
 
     let last = performance.now();
@@ -319,6 +424,41 @@ export function PixelPet() {
       if (visible || s.mode === "drag") s.offscreenAt = 0;
       else if (!s.offscreenAt) s.offscreenAt = now;
       else if (now - s.offscreenAt > 1300) respawn();
+
+      if (s.fetch) {
+        const f = s.fetch;
+        if (now > f.until) {
+          // errand expired — give up gracefully
+          setBubble(null);
+          s.fetch = null;
+          setCarrying(false);
+          window.dispatchEvent(new Event("pet:resume-done"));
+        } else if (f.stage === "toFolder") {
+          // grab is proximity-based (works mid-air too, e.g. falling past it)
+          const dx = f.x - (s.x + SIZE / 2);
+          const dy = f.y - (s.y + SIZE / 2);
+          if (Math.abs(dx) < 44 && Math.abs(dy) < 240) {
+            f.stage = "deliver";
+            setCarrying(true);
+            window.dispatchEvent(new Event("pet:resume-picked"));
+            showBubble("!", 700);
+            if (s.mode === "walk" || s.mode === "idle") {
+              s.mode = "fall";
+              s.vy = -260; // triumphant grab-hop
+            }
+          } else if (now - f.startedAt > 8000 && s.mode !== "drag") {
+            // no navigable path — glitch-warp beside the folder, like a respawn
+            flicker();
+            s.x = f.x - SIZE / 2;
+            s.y = f.y - SIZE - 70;
+            s.vx = 0;
+            s.vy = 0;
+            s.climb = null;
+            s.mode = "fall";
+            f.startedAt = now;
+          }
+        }
+      }
 
       if (s.mode === "drag") {
         // position follows the pointer; just dangle
@@ -405,7 +545,49 @@ export function PixelPet() {
         } else {
           s.y = ground.top - SIZE; // ride along if the card moves
 
-          if (now - s.lastInput > 20000) {
+          if (s.fetch) {
+            const f = s.fetch;
+            s.lastInput = now; // errands don't nap
+            let targetX = f.stage === "toFolder" ? f.x : window.scrollX + window.innerWidth / 2;
+            if (f.stage === "toFolder" && f.y - (s.y + SIZE / 2) > 240) {
+              // folder is below this platform — dropping in place just re-lands
+              // here, so sprint for the nearest ledge and run off it
+              const center = s.x + SIZE / 2;
+              targetX =
+                center - ground.left < ground.right - center
+                  ? ground.left - SIZE
+                  : ground.right + SIZE;
+            }
+            const dx = targetX - (s.x + SIZE / 2);
+
+            if (f.stage === "offer") {
+              s.vx = 0;
+              s.mode = "idle";
+            } else if (Math.abs(dx) > 26) {
+              s.dir = dx > 0 ? 1 : -1;
+              s.vx = s.dir * FETCH_SPEED;
+              s.mode = "walk";
+              if (Math.random() < dt * 5) dust(); // sprinting kicks up dust
+            } else if (f.stage === "toFolder") {
+              const dy = f.y - (s.y + SIZE / 2);
+              s.vx = 0;
+              if (dy < -40) {
+                s.mode = "fall";
+                s.vy = -340; // folder above — jump for it
+              }
+            } else {
+              // deliver: at the reader's spot — present the goods
+              const vTop2 = window.scrollY;
+              s.vx = 0;
+              if (s.y > vTop2 && s.y + SIZE < vTop2 + window.innerHeight) {
+                f.stage = "offer";
+                s.mode = "idle";
+                showBubble("resume.pdf ▶ take it!", Infinity);
+              }
+            }
+
+            if (s.mode === "walk" && s.vx !== 0) advanceWalk(ground, now, dt);
+          } else if (now - s.lastInput > 20000) {
             s.mode = "sleep";
             s.vx = 0;
             showBubble("Zzz", Infinity);
@@ -452,51 +634,7 @@ export function PixelPet() {
               if (s.mode === "idle") s.vx = 0;
             }
 
-            if (s.mode === "walk" && s.vx !== 0) {
-              const nx = s.x + s.vx * dt;
-              const d = s.dir;
-              const prevLead = d === 1 ? s.x + SIZE - 6 : s.x + 6;
-              const nextLead = d === 1 ? nx + SIZE - 6 : nx + 6;
-
-              // wall ahead? climb it or turn back
-              let hitWall: Wall | undefined;
-              for (const w of surfaces.walls) {
-                if (w.face !== d) continue;
-                const crossed = d === 1 ? prevLead <= w.x && nextLead >= w.x : prevLead >= w.x && nextLead <= w.x;
-                if (!crossed) continue;
-                const feet = s.y + SIZE;
-                if (feet > w.top + 12 && feet < w.bottom + 24 && w.top < feet - 20) {
-                  hitWall = w;
-                  break;
-                }
-              }
-
-              if (hitWall) {
-                if (Math.random() < 0.6) {
-                  s.mode = "climb";
-                  s.climb = { x: hitWall.x, top: hitWall.top, dir: d };
-                  s.climbStart = now;
-                  s.vx = 0;
-                } else {
-                  s.dir = (d * -1) as 1 | -1;
-                  s.vx = s.dir * Math.abs(s.vx);
-                }
-              } else {
-                const center = nx + SIZE / 2;
-                const beyondEdge = center < ground.left || center > ground.right;
-                const onFloor = ground.top >= document.documentElement.scrollHeight - 40;
-                if (beyondEdge && !s.edgeLatch) {
-                  s.edgeLatch = true;
-                  // sometimes turn back, sometimes step off the ledge
-                  if (Math.random() < 0.55 || onFloor) {
-                    s.dir = (s.dir * -1) as 1 | -1;
-                    s.vx = s.dir * Math.abs(s.vx);
-                  }
-                }
-                if (!beyondEdge) s.edgeLatch = false;
-                s.x = nx;
-              }
-            }
+            if (s.mode === "walk" && s.vx !== 0) advanceWalk(ground, now, dt);
           }
         }
       }
@@ -529,6 +667,7 @@ export function PixelPet() {
       cancelAnimationFrame(raf);
       window.clearInterval(refresh);
       window.clearTimeout(glitchTimer);
+      window.removeEventListener("pet:fetch-resume", onFetch);
       window.removeEventListener("mousemove", onMouse);
       window.removeEventListener("scroll", onInput);
       window.removeEventListener("keydown", onInput);
@@ -545,7 +684,7 @@ export function PixelPet() {
     <div ref={layerRef} className="pet-layer">
       <button
         ref={petRef}
-        className="pixel-pet"
+        className={`pixel-pet${carrying ? " pet-carrying" : ""}`}
         aria-label="Pixel companion"
         data-cursor-hover
         onClick={(e) => {
@@ -554,6 +693,7 @@ export function PixelPet() {
         }}
       >
         {bubble && <span className="pet-bubble">{bubble}</span>}
+        {carrying && <span className="pet-paper" />}
         <span ref={flipRef} className="pet-flip">
           {broken ? (
             <span

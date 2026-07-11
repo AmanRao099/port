@@ -1,6 +1,7 @@
 import { motion, useMotionValue, animate } from "framer-motion";
 import { useEffect, useRef } from "react";
 import { SectionHeading } from "./ui/SectionHeading";
+import { ResumeFolder } from "./ui/ResumeFolder";
 import { profile } from "../data/profile";
 
 function StatCard({ value, suffix, label, index }: { value: number; suffix: string; label: string; index: number }) {
@@ -40,6 +41,8 @@ export function About() {
   return (
     <section id="about" className="relative mx-auto max-w-6xl px-6 py-28 md:px-10 md:py-36">
       <SectionHeading kicker="About" title="Engineering with both ends in mind." />
+
+      <ResumeFolder />
 
       <div className="mt-14 grid grid-cols-1 gap-16 md:grid-cols-5">
         <div className="md:col-span-3">
